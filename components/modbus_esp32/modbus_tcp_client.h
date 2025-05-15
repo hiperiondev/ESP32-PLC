@@ -27,17 +27,7 @@
  *
  */
 
-#include "cmd_system.h"
+#ifndef MODBUS_TCP_CLIENT_H_
+#define MODBUS_TCP_CLIENT_H_
 
-void register_system(void)
-{
-    register_system_common();
-
-#if SOC_LIGHT_SLEEP_SUPPORTED
-    register_system_light_sleep();
-#endif
-
-#if SOC_DEEP_SLEEP_SUPPORTED
-    register_system_deep_sleep();
-#endif
-}
+#endif /* MODBUS_TCP_CLIENT_H_ */

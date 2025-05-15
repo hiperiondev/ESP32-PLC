@@ -1,11 +1,8 @@
 /*
  * Copyright 2025 Emiliano Gonzalez (egonzalez . hiperion @ gmail . com))
- * * Project Site: https://github.com/hiperiondev/ladderlib *
+ * * Project Site: https://github.com/hiperiondev/ESP32-PLC *
  *
- * This is based on other projects:
- *    PLsi (https://github.com/ElPercha/PLsi)
- *
- *    please contact their authors for more information.
+ * This is based on other projects, please contact their authors for more information.
  *
  * The MIT License (MIT)
  *

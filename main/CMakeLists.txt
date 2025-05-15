@@ -20,4 +20,6 @@ idf_component_register(
         cmd_system
         cmd_ladderlib
         wifi-provisioning
+        webeditor
+        modbus_esp32
 )
