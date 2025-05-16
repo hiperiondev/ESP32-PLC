@@ -1,3 +1,0 @@
-CompileFlags:
-  CompilationDatabase: /home/opt/Desarrollos/workspace-ladderlib/esp32-plc/build
-  Remove: [-m*, -f*]
