@@ -12,6 +12,9 @@ idf_component_register(
         ladderlib
         esp_http_server
         
+    EMBED_TXTFILES
+        ./ladder_editor.html
+    
     EMBED_FILES
-        ladder_editor.html
+        ./webeditor_favicon.ico
 )

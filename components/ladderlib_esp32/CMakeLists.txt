@@ -12,4 +12,5 @@ idf_component_register(
         driver
         ladderlib
         hal_esp32
+        esp_timer
 )

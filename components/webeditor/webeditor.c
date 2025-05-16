@@ -27,8 +27,6 @@
  *
  */
 
-#define CONFIG_HTTPD_WS_SUPPORT
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,25 +36,27 @@
 #include <esp_log.h>
 
 static const char *TAG = "WebSocket Server";
-extern const char index_html[] asm("_ladder_editor.html");
-char response_data[4096];
-httpd_handle_t server = NULL;
+extern const char index_html[] asm("_binary_ladder_editor_html_start");
+extern const char favicon_ico[] asm("_binary_webeditor_favicon_ico_start");
 
-struct async_resp_arg {
+static httpd_handle_t server = NULL;
+
+typedef struct async_resp_arg_s {
     httpd_handle_t hd;
     int fd;
-};
+} async_resp_arg_t;
 
-esp_err_t get_req_handler(httpd_req_t *req) {
-    int response;
-    sprintf(response_data, index_html, "ON");
-    response = httpd_resp_send(req, response_data, HTTPD_RESP_USE_STRLEN);
-    return response;
+static esp_err_t root_get_req_handler(httpd_req_t *req) {
+    return httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);
+}
+
+static esp_err_t favicon_get_req_handler(httpd_req_t *req) {
+    return httpd_resp_send(req, favicon_ico, HTTPD_RESP_USE_STRLEN);
 }
 
 static void ws_async_send(void *arg) {
     httpd_ws_frame_t ws_pkt;
-    struct async_resp_arg *resp_arg = arg;
+    async_resp_arg_t *resp_arg = arg;
     httpd_handle_t hd = resp_arg->hd;
 
     char buff[4];
@@ -88,7 +88,7 @@ static void ws_async_send(void *arg) {
 }
 
 static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req) {
-    struct async_resp_arg *resp_arg = malloc(sizeof(struct async_resp_arg));
+    async_resp_arg_t *resp_arg = malloc(sizeof(struct async_resp_arg_s));
     resp_arg->hd = req->handle;
     resp_arg->fd = httpd_req_to_sockfd(req);
     return httpd_queue_work(handle, ws_async_send, resp_arg);
@@ -135,17 +135,39 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
     return ESP_OK;
 }
 
-httpd_handle_t setup_websocket_server(void) {
+void setup_websocket_server(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
-    httpd_uri_t uri_get = { .uri = "/", .method = HTTP_GET, .handler = get_req_handler, .user_ctx = NULL };
-
-    httpd_uri_t ws = { .uri = "/ws", .method = HTTP_GET, .handler = handle_ws_req, .user_ctx = NULL, .is_websocket = true };
+    config.stack_size = 8192;
+    config.core_id = 0;
 
     if (httpd_start(&server, &config) == ESP_OK) {
-        httpd_register_uri_handler(server, &uri_get);
-        httpd_register_uri_handler(server, &ws);
-    }
+        httpd_uri_t root = {
+            .uri = "/",                      //
+            .method = HTTP_GET,              //
+            .handler = root_get_req_handler, //
+            .user_ctx = NULL                 //
+        };
+        httpd_register_uri_handler(server, &root);
 
-    return server;
+        httpd_uri_t favicon = {
+            .uri = "/favicon.ico",              //
+            .method = HTTP_GET,                 //
+            .handler = favicon_get_req_handler, //
+            .user_ctx = NULL                    //
+        };
+        httpd_register_uri_handler(server, &favicon);
+
+        httpd_uri_t ws = {
+            .uri = "/ws",             //
+            .method = HTTP_GET,       //
+            .handler = handle_ws_req, //
+            .user_ctx = NULL,         //
+            .is_websocket = true      //
+        };
+        httpd_register_uri_handler(server, &ws);
+
+        ESP_LOGI(TAG, "Websocket server started");
+    } else {
+        ESP_LOGI(TAG, "Websocket server failed");
+    }
 }

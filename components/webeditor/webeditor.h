@@ -30,8 +30,6 @@
 #ifndef WEBEDITOR_H_
 #define WEBEDITOR_H_
 
-
-
-
+void setup_websocket_server(void);
 
 #endif /* WEBEDITOR_H_ */

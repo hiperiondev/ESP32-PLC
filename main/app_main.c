@@ -40,8 +40,8 @@
 #include "ladder.h"
 #include "ladderlib_esp32_gpio.h"
 #include "ladderlib_esp32_std.h"
+#include "webeditor.h"
 #include "wifi-provisioning.h"
-#include "modbus_tcp_client.h"
 
 #define CONSOLE_MAX_COMMAND_LINE_LENGTH 1024
 #define HISTORY_PATH                    "/littlefs/history.txt"
@@ -67,10 +67,6 @@ void app_main(void) {
     // ESP_LOGI(TAG, "Publish mDNS hostname %s.local.", TAG);
     // ESP_ERROR_CHECK(mdns_init());
     // ESP_ERROR_CHECK(mdns_hostname_set(TAG));
-
-    ///////////////////////////////////////////////////////
-
-    printf("Start console");
 
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
@@ -98,9 +94,8 @@ void app_main(void) {
     esp_console_dev_uart_config_t hw_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_console_new_repl_uart(&hw_config, &repl_config, &repl));
     ESP_ERROR_CHECK(esp_console_start_repl(repl));
-    ///////////////////////////////////////////////////////
 
-    printf("--[ laderlib version: %d.%d.%d ]--\n\n", LADDERLIB_VERSION_MAYOR, LADDERLIB_VERSION_MINOR, LADDERLIB_VERSION_PATCH);
+    printf("--[ ladderlib version: %d.%d.%d ]--\n\n", LADDERLIB_VERSION_MAYOR, LADDERLIB_VERSION_MINOR, LADDERLIB_VERSION_PATCH);
 
     // initialize context
     if (!ladder_ctx_init(&ladder_ctx, 6, 7, 3, QTY_M, QTY_C, QTY_T, QTY_D, QTY_R, false)) {
@@ -126,6 +121,7 @@ void app_main(void) {
     ladder_ctx.on.end_task = esp32_on_end_task;
     ladder_ctx.hw.time.millis = esp32_millis;
     ladder_ctx.hw.time.delay = esp32_delay;
-
     ladder_ctx.ladder.state = LADDER_ST_STOPPED;
+
+    setup_websocket_server();
 }
