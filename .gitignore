@@ -62,3 +62,6 @@ build/
 dependencies.lock
 managed_components/
 sdkconfig.old
+.clangd
+gdbstub_*
+hs_err_pid*

@@ -144,7 +144,7 @@ static int ladder_save(int argc, char **argv) {
     uint8_t err = 0;
 
     printf("Save program: %s\n", argv[1]);
-    if ((err = ladder_program_to_json(argv[1], &ladder_ctx)) != JSON_ERROR_OK) {
+    if ((err = ladder_program_to_json(argv[1], NULL, &ladder_ctx, false)) != JSON_ERROR_OK) {
         printf(">> ERROR: Save demo program (%d)\n", err);
         return 1;
     }
@@ -163,7 +163,7 @@ static int ladder_load(int argc, char **argv) {
     ladder_prg_check_t err_prg_check;
 
     printf("Load from: %s\n", argv[1]);
-    if ((err = ladder_json_to_program(argv[1], &ladder_ctx)) != JSON_ERROR_OK) {
+    if ((err = ladder_json_to_program(argv[1], NULL, &ladder_ctx, false)) != JSON_ERROR_OK) {
         printf(">> ERROR: Load demo program (%d)\n", err);
         return 1;
     }

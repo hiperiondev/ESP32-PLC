@@ -11,6 +11,7 @@ idf_component_register(
     REQUIRES
         ladderlib
         esp_http_server
+        ladderlib_esp32
         
     EMBED_TXTFILES
         ./ladder_editor.html

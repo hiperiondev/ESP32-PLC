@@ -51,8 +51,9 @@ typedef enum JSON_ERROR {
     JSON_ERROR_COMPACTFILE,     //
     JSON_ERROR_WRITEFILE,       //
     JSON_ERROR_INVALIDVALUE,    //
+    JSON_ERROR_NOPROGRAM,       //
     //////////////////////////////
-    JSON_ERROR_FAIL //
+    JSON_ERROR_FAIL             //
 
 } ladder_json_error_t;
 
@@ -61,20 +62,24 @@ typedef enum JSON_ERROR {
  * @brief
  *
  * @param prg prg file name of JSON program
+ * @param prg_extern
  * @param ladder_ctx Ladder context
+ * @param from_extern
  * @return Status
  */
-ladder_json_error_t ladder_json_to_program(const char *prg, ladder_ctx_t *ladder_ctx);
+ladder_json_error_t ladder_json_to_program(const char *prg, char *prg_extern, ladder_ctx_t *ladder_ctx, bool from_extern);
 
 /**
  * @fn ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t* ladder_ctx)
  * @brief
  *
  * @param prg prg file name of JSON program
+ * @param prg_extern
  * @param ladder_ctx Ladder context
+ * @param to_extern
  * @return Status
  */
-ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder_ctx);
+ladder_json_error_t ladder_program_to_json(const char *prg, char **prg_extern, ladder_ctx_t *ladder_ctx, bool to_extern);
 
 /**
  * @fn ladder_json_error_t ladder_compact_json_file(const char *input_path, const char *output_path)

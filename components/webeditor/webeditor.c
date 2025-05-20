@@ -35,11 +35,28 @@
 #include <esp_http_server.h>
 #include <esp_log.h>
 
+#include "ladder_program_json.h"
+#include "webeditor.h"
+
 static const char *TAG = "WebSocket Server";
 extern const char index_html[] asm("_binary_ladder_editor_html_start");
 extern const char favicon_ico[] asm("_binary_webeditor_favicon_ico_start");
+extern ladder_ctx_t ladder_ctx;
 
 static httpd_handle_t server = NULL;
+static char *response_data = NULL;
+
+static char *ws_commands[] = {
+    "get_flag",
+    "load",
+    "save",
+};
+
+enum WS_COMMAND {
+    WS_GET_FLAG,
+    WS_LOAD,
+    WS_SAVE,
+};
 
 typedef struct async_resp_arg_s {
     httpd_handle_t hd;
@@ -47,7 +64,10 @@ typedef struct async_resp_arg_s {
 } async_resp_arg_t;
 
 static esp_err_t root_get_req_handler(httpd_req_t *req) {
-    return httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);
+    if (response_data != NULL)
+        return httpd_resp_send(req, response_data, HTTPD_RESP_USE_STRLEN);
+    else
+        return httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);
 }
 
 static esp_err_t favicon_get_req_handler(httpd_req_t *req) {
@@ -59,39 +79,62 @@ static void ws_async_send(void *arg) {
     async_resp_arg_t *resp_arg = arg;
     httpd_handle_t hd = resp_arg->hd;
 
-    char buff[4];
-    memset(buff, 0, sizeof(buff));
-    sprintf(buff, "%d", 666);
+    if (response_data == NULL) {
+        ESP_LOGI(TAG, "No response data");
+        return;
+    }
+
+    ESP_LOGI(TAG, "Start response data");
 
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = (uint8_t *)buff;
-    ws_pkt.len = strlen(buff);
+    ws_pkt.payload = (uint8_t *)response_data;
+    ws_pkt.len = strlen(response_data);
     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
 
-    static size_t max_clients = 1;
+    static size_t max_clients = 2;
     size_t fds = max_clients;
     int client_fds[max_clients];
 
     esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
+    ESP_LOGI(TAG, "Client list err: %d", ret);
+    ESP_LOGI(TAG, "[HTTPD CLIENT TYPE]");
+    for (int i = 0; i < fds; i++) {
+        int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
+        ESP_LOGI(TAG, "    [%d] = %s (%d)", i,
+                 client_info == HTTPD_WS_CLIENT_INVALID     ? "HTTPD_WS_CLIENT_INVALID"
+                 : client_info == HTTPD_WS_CLIENT_HTTP      ? "HTTPD_WS_CLIENT_HTTP"
+                 : client_info == HTTPD_WS_CLIENT_WEBSOCKET ? "HTTPD_WS_CLIENT_WEBSOCKET"
+                                                            : "UNKNOWN",
+                 client_info);
+    }
 
     if (ret != ESP_OK) {
+        ESP_LOGI(TAG, "No clients");
+        free(response_data);
+        response_data = NULL;
         return;
     }
 
     for (int i = 0; i < fds; i++) {
         int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
         if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
+            ESP_LOGI(TAG, "Response on client %d", i);
             httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
         }
     }
     free(resp_arg);
+    free(response_data);
+    response_data = NULL;
+    ESP_LOGI(TAG, "End response data");
 }
 
 static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req) {
+    esp_err_t err = 0;
     async_resp_arg_t *resp_arg = malloc(sizeof(struct async_resp_arg_s));
     resp_arg->hd = req->handle;
     resp_arg->fd = httpd_req_to_sockfd(req);
-    return httpd_queue_work(handle, ws_async_send, resp_arg);
+    err = httpd_queue_work(handle, ws_async_send, resp_arg);
+    return err;
 }
 
 static esp_err_t handle_ws_req(httpd_req_t *req) {
@@ -102,8 +145,10 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
 
     httpd_ws_frame_t ws_pkt;
     uint8_t *buf = NULL;
+    uint8_t err = 0;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+
     esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
     if (ret != ESP_OK) {
         ESP_LOGI(TAG, "httpd_ws_recv_frame failed to get frame len with %d", ret);
@@ -124,20 +169,103 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
             return ret;
         }
         ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
+
+        if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
+            char type[64], cmd[64];
+            char *str_start = NULL, *str_end = NULL;
+
+            str_start = strchr((char *)ws_pkt.payload, '"');
+            if (str_start == NULL)
+                return ESP_OK;
+
+            str_end = strchr(str_start + 1, '"');
+            if (str_end == NULL)
+                return ESP_OK;
+
+            memset(type, 0, 64);
+            memcpy(type, str_start + 1, (str_end - str_start - 1) < 64 ? (str_end - str_start - 1) : 63);
+
+            str_start = strchr(str_end + 1, '"');
+            if (str_start == NULL)
+                return ESP_OK;
+
+            str_end = strchr(str_start + 1, '"');
+            if (str_end == NULL)
+                return ESP_OK;
+
+            memset(cmd, 0, 64);
+            memcpy(cmd, str_start + 1, (str_end - str_start - 1) < 64 ? (str_end - str_start - 1) : 63);
+
+            ESP_LOGI(TAG, "type: %s, command: %s", type, cmd);
+
+            int8_t _cmd = -1;
+            for (uint8_t n = 0; n < sizeof(ws_commands) / sizeof(ws_commands[0]); n++) {
+                if (strcmp(type, "action") == 0 && strcmp(cmd, ws_commands[n]) == 0) {
+                    _cmd = n;
+                    break;
+                }
+            }
+
+            if (response_data != NULL) {
+                free(response_data);
+                response_data = NULL;
+            }
+
+            switch (_cmd) {
+                case WS_GET_FLAG:
+                    ESP_LOGI(TAG, "Requested: get_flag");
+                    response_data = strdup("{\"sameDimensionsFlag\":\"true\"}");
+                    break;
+                case WS_LOAD:
+                    ESP_LOGI(TAG, "Requested: load");
+                    char *json = NULL;
+                    if ((err = ladder_program_to_json("", &json, &ladder_ctx, true)) != JSON_ERROR_OK) {
+                        ESP_LOGI(TAG, ">> ERROR: Program to websocket (%d)\n", err);
+                        return 1;
+                    }
+
+                    if (json != NULL)
+                        ESP_LOGI(TAG, "JSON: ok");
+                    else
+                        ESP_LOGI(TAG, "JSON: empty");
+
+                    response_data = malloc(strlen(json) + 35);
+                    sprintf(response_data, "{\"action\":\"load_response\",\"data\": %s}", json);
+                    free(json);
+                    break;
+                case WS_SAVE:
+                    ESP_LOGI(TAG, "Requested: save");
+                    char *prg = NULL;
+                    prg = strchr((char *)ws_pkt.payload, '[');
+                    if (prg == NULL) {
+                        ESP_LOGI(TAG, ">> ERROR: Program from websocket");
+                        return ESP_OK;
+                    }
+
+                    prg[strlen(prg) - 1] = ' ';
+
+                    if ((err = ladder_json_to_program("", prg, &ladder_ctx, true)) != JSON_ERROR_OK) {
+                        ESP_LOGI(TAG, ">> ERROR: Program from websocket (%d)\n", err);
+                        return 1;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            free(buf);
+            return trigger_async_send(req->handle, req);
+        }
     }
 
     ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
 
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT && strcmp((char *)ws_pkt.payload, "toggle") == 0) {
-        free(buf);
-        return trigger_async_send(req->handle, req);
-    }
     return ESP_OK;
 }
 
-void setup_websocket_server(void) {
+void start_websocket_server(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.stack_size = 8192;
+    config.stack_size = 32768;
     config.core_id = 0;
 
     if (httpd_start(&server, &config) == ESP_OK) {

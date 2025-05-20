@@ -174,29 +174,37 @@ static int write_file(const char *path, const char *content) {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-ladder_json_error_t ladder_json_to_program(const char *prg, ladder_ctx_t *ladder_ctx) {
+ladder_json_error_t ladder_json_to_program(const char *prg, char *prg_extern, ladder_ctx_t *ladder_ctx, bool from_extern) {
+    cJSON *root = NULL;
+    char *json_string = NULL;
 
-    FILE *fp = fs_open(prg, "r");
-    if (!fp) {
-        return JSON_ERROR_OPENFILE;
-    }
+    if (!from_extern) {
+        FILE *fp = fs_open(prg, "r");
+        if (!fp) {
+            return JSON_ERROR_OPENFILE;
+        }
 
-    fseek(fp, 0, SEEK_END);
-    long size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    char *json_string = malloc(size + 1);
-    if (!json_string) {
+        fseek(fp, 0, SEEK_END);
+        long size = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        json_string = malloc(size + 1);
+        if (!json_string) {
+            fclose(fp);
+            return JSON_ERROR_ALLOC_STRING;
+        }
+        fread(json_string, 1, size, fp);
+        json_string[size] = '\0';
         fclose(fp);
-        return JSON_ERROR_ALLOC_STRING;
-    }
-    fread(json_string, 1, size, fp);
-    json_string[size] = '\0';
-    fclose(fp);
 
-    cJSON *root = cJSON_Parse(json_string);
-    if (!root) {
-        free(json_string);
-        return JSON_ERROR_PARSE;
+        root = cJSON_Parse(json_string);
+        if (!root) {
+            free(json_string);
+            return JSON_ERROR_PARSE;
+        }
+    } else {
+        root = cJSON_Parse(prg_extern);
+        if (!root)
+            return JSON_ERROR_PARSE;
     }
 
     (*ladder_ctx).ladder.quantity.networks = cJSON_GetArraySize(root);
@@ -204,7 +212,8 @@ ladder_json_error_t ladder_json_to_program(const char *prg, ladder_ctx_t *ladder
     (*ladder_ctx).network = calloc((*ladder_ctx).ladder.quantity.networks, sizeof(ladder_network_t));
     if (!(*ladder_ctx).network) {
         cJSON_Delete(root);
-        free(json_string);
+        if (!from_extern)
+            free(json_string);
         return JSON_ERROR_ALLOC_NETWORK;
     }
 
@@ -285,20 +294,28 @@ ladder_json_error_t ladder_json_to_program(const char *prg, ladder_ctx_t *ladder
     }
 
     cJSON_Delete(root);
-    free(json_string);
+    if (!from_extern)
+        free(json_string);
 
     return JSON_ERROR_OK;
 }
 
-ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder_ctx) {
-    FILE *fp = fs_open(prg, "w");
-    if (fp == NULL) {
-        return JSON_ERROR_OPENFILE;
+ladder_json_error_t ladder_program_to_json(const char *prg, char **prg_extern, ladder_ctx_t *ladder_ctx, bool to_extern) {
+    if (ladder_ctx == NULL || (*ladder_ctx).network == NULL)
+        return JSON_ERROR_NOPROGRAM;
+
+    FILE *fp = NULL;
+    if (!to_extern) {
+        fp = fs_open(prg, "w");
+        if (fp == NULL) {
+            return JSON_ERROR_OPENFILE;
+        }
     }
 
     cJSON *root = cJSON_CreateArray();
     if (root == NULL) {
-        fclose(fp);
+        if (!to_extern)
+            fclose(fp);
         return JSON_ERROR_CREATEARRAY;
     }
 
@@ -306,7 +323,8 @@ ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder
         cJSON *network_obj = cJSON_CreateObject();
         if (network_obj == NULL) {
             cJSON_Delete(root);
-            fclose(fp);
+            if (!to_extern)
+                fclose(fp);
             return JSON_ERROR_CREATENETOBJT;
         }
 
@@ -318,7 +336,8 @@ ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder
         if (networkData == NULL) {
             cJSON_Delete(network_obj);
             cJSON_Delete(root);
-            fclose(fp);
+            if (!to_extern)
+                fclose(fp);
             return JSON_ERROR_CREATENETDATA;
         }
 
@@ -328,7 +347,8 @@ ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder
                 cJSON_Delete(networkData);
                 cJSON_Delete(network_obj);
                 cJSON_Delete(root);
-                fclose(fp);
+                if (!to_extern)
+                    fclose(fp);
                 return JSON_ERROR_CREATEROWARRAY;
             }
 
@@ -355,7 +375,8 @@ ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder
                     cJSON_Delete(networkData);
                     cJSON_Delete(network_obj);
                     cJSON_Delete(root);
-                    fclose(fp);
+                    if (!to_extern)
+                        fclose(fp);
                     return JSON_ERROR_CREATEDATAARRAY;
                 }
 
@@ -369,7 +390,8 @@ ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder
                         cJSON_Delete(networkData);
                         cJSON_Delete(network_obj);
                         cJSON_Delete(root);
-                        fclose(fp);
+                        if (!to_extern)
+                            fclose(fp);
                         return JSON_ERROR_CREATEDATAOBJ;
                     }
 
@@ -396,7 +418,7 @@ ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder
                             break;
 
                         default:
-                            snprintf(value_str, sizeof(value_str), "%lu", val->value.u32);
+                            snprintf(value_str, sizeof(value_str), "%lu", (unsigned long)val->value.u32);
                             break;
                     }
 
@@ -418,14 +440,21 @@ ladder_json_error_t ladder_program_to_json(const char *prg, ladder_ctx_t *ladder
     char *json_str = cJSON_Print(root);
     if (json_str == NULL) {
         cJSON_Delete(root);
-        fclose(fp);
+        if (!to_extern)
+            fclose(fp);
         return JSON_ERROR_PRINTOBJ;
     }
 
-    fprintf(fp, "%s", json_str);
+    if (!to_extern)
+        fprintf(fp, "%s", json_str);
+    else {
+        (*prg_extern) = strdup(json_str);
+    }
+
     free(json_str);
     cJSON_Delete(root);
-    fclose(fp);
+    if (!to_extern)
+        fclose(fp);
     return JSON_ERROR_OK;
 }
 

@@ -123,5 +123,5 @@ void app_main(void) {
     ladder_ctx.hw.time.delay = esp32_delay;
     ladder_ctx.ladder.state = LADDER_ST_STOPPED;
 
-    setup_websocket_server();
+    start_websocket_server();
 }
