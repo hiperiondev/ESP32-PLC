@@ -1794,7 +1794,11 @@
         };
 
         // WebSocket setup for real-time communication with server
-        const ws = new WebSocket("ws://192.168.69.95/ws");
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = location.host;
+        const wsUrl = `${protocol}//${host}/ws`;
+        const ws = new WebSocket(wsUrl);
+        
         let wsStatus = "disconnected"; // Tracks WebSocket connection state
         // Updates the WebSocket status indicator color
         function updateIndicator() {
