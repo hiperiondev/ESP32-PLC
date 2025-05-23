@@ -1,3 +1,6 @@
 [submodule "components/ladderlib/ladderlib"]
 	path = components/ladderlib/ladderlib
 	url = git@github.com:hiperiondev/ladderlib.git
+[submodule "components/webeditor/ladder-editor"]
+	path = components/webeditor/ladder-editor
+	url = https://github.com/hiperiondev/ladder-editor.git

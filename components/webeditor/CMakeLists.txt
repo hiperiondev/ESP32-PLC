@@ -14,7 +14,7 @@ idf_component_register(
         ladderlib_esp32
         
     EMBED_TXTFILES
-        ./ladder_editor.html
+        ./ladder-editor/ladder_editor.html
     
     EMBED_FILES
         ./webeditor_favicon.ico

@@ -251,19 +251,24 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
                     }
                     break;
                 case WS_START:
-                    if (ladder_ctx.network == NULL) {
-                        ESP_LOGI(TAG, ">> ERROR: No networks!");
+                    if (ladder_ctx.network == NULL || ladder_ctx.ladder.state == LADDER_ST_RUNNING) {
+                        ESP_LOGI(TAG, ">> ERROR: No networks or already running");
                         return 1;
                     }
-
+                    ESP_LOGI(TAG, "Requested: start");
                     ladder_ctx.ladder.state = LADDER_ST_RUNNING;
 
-                    ESP_LOGI(TAG, "Start Task Ladder");
+                    ESP_LOGI(TAG, "Start task ladder");
                     if (xTaskCreatePinnedToCore(ladder_task, "ladder", 30000, (void *)&ladder_ctx, 10, &laddertsk_handle, 1) != pdPASS)
                         ESP_LOGI(TAG, "ERROR: start task ladder");
 
                     break;
                 case WS_STOP:
+                    ESP_LOGI(TAG, "Requested: stop");
+                    if (ladder_ctx.ladder.state != LADDER_ST_RUNNING) {
+                        ESP_LOGI(TAG, ">> ERROR: Not running");
+                        return 1;
+                    }
                     ladder_ctx.ladder.state = LADDER_ST_EXIT_TSK;
                     break;
                 default:
@@ -282,7 +287,7 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
 
 void start_websocket_server(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.stack_size = 32768;
+    config.stack_size = 10000;
     config.core_id = 0;
 
     if (httpd_start(&server, &config) == ESP_OK) {
