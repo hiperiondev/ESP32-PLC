@@ -1,0 +1,3 @@
+[submodule "components/ladderlib/ladderlib"]
+	path = components/ladderlib/ladderlib
+	url = git@github.com:hiperiondev/ladderlib.git
