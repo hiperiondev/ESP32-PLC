@@ -17,9 +17,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
   
-**ESP32-PLC** is an open-source project that enables the ESP32 microcontroller to function as a Programmable Logic Controller (PLC) using ladder logic programming. Built with the Espressif IoT Development Framework (ESP-IDF), it leverages the [ladderlib](https://github.com/hiperiondev/ladderlib) C library to execute  
-ladder logic programs and likely integrates with the [ladder-editor](https://github.com/hiperiondev/ladder-editor) web application for designing control logic. This project is currently under active development, offering a cost-effective solution for industrial automation, educational purposes, and hobbyist project  
-s.  
+**ESP32-PLC** is an open-source project that enables the ESP32 microcontroller to function as a Programmable Logic Controller (PLC) using ladder logic programming. Built with the Espressif IoT Development Framework (ESP-IDF), it leverages the [ladderlib](https://github.com/hiperiondev/ladderlib) C library to execute ladder logic programs and likely integrates with the [ladder-editor](https://github.com/hiperiondev/ladder-editor) web application for designing control logic. This project is currently under active development, offering a cost-effective solution for industrial automation, educational purposes, and hobbyist projects.  
   
 ## Table of Contents  
   
@@ -37,11 +35,9 @@ s.
   
 ## Introduction  
   
-The ESP32-PLC project, developed by hiperiondev, aims to transform the ESP32 microcontroller into a Programmable Logic Controller (PLC) for industrial automation and control systems. PLCs are specialized devices used to control machinery and processes through programmed logic, commonly using ladder logic, a graphica  
-l programming language defined by the IEC 61131-3 standard. Unlike traditional PLCs, which can be expensive, this project leverages the low-cost, feature-rich ESP32, known for its dual-core processor, Wi-Fi, and Bluetooth capabilities, to provide an accessible alternative.  
+The ESP32-PLC project, developed by hiperiondev, aims to transform the ESP32 microcontroller into a Programmable Logic Controller (PLC) for industrial automation and control systems. PLCs are specialized devices used to control machinery and processes through programmed logic, commonly using ladder logic, a graphical programming language defined by the IEC 61131-3 standard. Unlike traditional PLCs, which can be expensive, this project leverages the low-cost, feature-rich ESP32, known for its dual-core processor, Wi-Fi, and Bluetooth capabilities, to provide an accessible alternative.  
   
-The project uses the Espressif IoT Development Framework (ESP-IDF), a low-level development environment that offers greater control over the ESP32 hardware compared to Arduino-based solutions. It likely integrates the [ladderlib](https://github.com/hiperiondev/ladderlib) C library for executing ladder logic programs  
-and may work with the [ladder-editor](https://github.com/hiperiondev/ladder-editor), a web-based tool for creating and simulating ladder logic diagrams. As a work-in-progress, the project may lack comprehensive documentation, but it holds promise for applications in industrial automation, education, and IoT.  
+The project uses the Espressif IoT Development Framework (ESP-IDF), a low-level development environment that offers greater control over the ESP32 hardware compared to Arduino-based solutions. It likely integrates the [ladderlib](https://github.com/hiperiondev/ladderlib) C library for executing ladder logic programs and may work with the [ladder-editor](https://github.com/hiperiondev/ladder-editor), a web-based tool for creating and simulating ladder logic diagrams. As a work-in-progress, the project may lack comprehensive documentation, but it holds promise for applications in industrial automation, education, and IoT.  
   
 ## Features  
   
