@@ -40,23 +40,29 @@
 #include "webeditor.h"
 
 static const char *TAG = "WebSocket Server";
+
 extern const char index_html[] asm("_binary_ladder_editor_html_start");
 extern const char favicon_ico[] asm("_binary_webeditor_favicon_ico_start");
+extern TaskHandle_t laddertsk_handle;
 extern ladder_ctx_t ladder_ctx;
 bool websocket_open = false;
 static httpd_handle_t server = NULL;
 static char *response_data = NULL;
 
 static char *ws_commands[] = {
-    "get_flag",
-    "load",
-    "save",
+    "get_flag", //
+    "load",     //
+    "save",     //
+    "start",    //
+    "stop",     //
 };
 
 enum WS_COMMAND {
     WS_GET_FLAG,
     WS_LOAD,
     WS_SAVE,
+    WS_START,
+    WS_STOP,
 };
 
 typedef struct async_resp_arg_s {
@@ -85,7 +91,7 @@ static void ws_async_send(void *arg) {
         return;
     }
 
-    //ESP_LOGI(TAG, "Start response data");
+    // ESP_LOGI(TAG, "Start response data");
 
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
     ws_pkt.payload = (uint8_t *)response_data;
@@ -97,17 +103,6 @@ static void ws_async_send(void *arg) {
     int client_fds[max_clients];
 
     esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
-    //ESP_LOGI(TAG, "Client list err: %d", ret);
-    //ESP_LOGI(TAG, "[HTTPD CLIENT TYPE]");
-    //for (int i = 0; i < fds; i++) {
-        //int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
-        //ESP_LOGI(TAG, "    [%d] = %s (%d)", i,
-        //         client_info == HTTPD_WS_CLIENT_INVALID     ? "HTTPD_WS_CLIENT_INVALID"
-        //         : client_info == HTTPD_WS_CLIENT_HTTP      ? "HTTPD_WS_CLIENT_HTTP"
-        //         : client_info == HTTPD_WS_CLIENT_WEBSOCKET ? "HTTPD_WS_CLIENT_WEBSOCKET"
-        //                                                    : "UNKNOWN",
-        //         client_info);
-    //}
 
     if (ret != ESP_OK) {
         ESP_LOGI(TAG, "No clients");
@@ -119,7 +114,7 @@ static void ws_async_send(void *arg) {
     for (int i = 0; i < fds; i++) {
         int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
         if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
-            //ESP_LOGI(TAG, "Response on client %d", i);
+            // ESP_LOGI(TAG, "Response on client %d", i);
             httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
         }
     }
@@ -128,7 +123,6 @@ static void ws_async_send(void *arg) {
     if (response_data != NULL)
         free(response_data);
     response_data = NULL;
-    //ESP_LOGI(TAG, "End response data");
 }
 
 static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req) {
@@ -174,7 +168,7 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
             free(buf);
             return ret;
         }
-        //ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
+        // ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
 
         if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
             char type[64], cmd[64];
@@ -255,6 +249,22 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
                         ESP_LOGI(TAG, ">> ERROR: Program from websocket (%d)\n", err);
                         return 1;
                     }
+                    break;
+                case WS_START:
+                    if (ladder_ctx.network == NULL) {
+                        ESP_LOGI(TAG, ">> ERROR: No networks!");
+                        return 1;
+                    }
+
+                    ladder_ctx.ladder.state = LADDER_ST_RUNNING;
+
+                    ESP_LOGI(TAG, "Start Task Ladder");
+                    if (xTaskCreatePinnedToCore(ladder_task, "ladder", 30000, (void *)&ladder_ctx, 10, &laddertsk_handle, 1) != pdPASS)
+                        ESP_LOGI(TAG, "ERROR: start task ladder");
+
+                    break;
+                case WS_STOP:
+                    ladder_ctx.ladder.state = LADDER_ST_EXIT_TSK;
                     break;
                 default:
                     break;
