@@ -85,7 +85,7 @@ static void ws_async_send(void *arg) {
         return;
     }
 
-    ESP_LOGI(TAG, "Start response data");
+    //ESP_LOGI(TAG, "Start response data");
 
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
     ws_pkt.payload = (uint8_t *)response_data;
@@ -97,17 +97,17 @@ static void ws_async_send(void *arg) {
     int client_fds[max_clients];
 
     esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
-    ESP_LOGI(TAG, "Client list err: %d", ret);
-    ESP_LOGI(TAG, "[HTTPD CLIENT TYPE]");
-    for (int i = 0; i < fds; i++) {
-        int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
-        ESP_LOGI(TAG, "    [%d] = %s (%d)", i,
-                 client_info == HTTPD_WS_CLIENT_INVALID     ? "HTTPD_WS_CLIENT_INVALID"
-                 : client_info == HTTPD_WS_CLIENT_HTTP      ? "HTTPD_WS_CLIENT_HTTP"
-                 : client_info == HTTPD_WS_CLIENT_WEBSOCKET ? "HTTPD_WS_CLIENT_WEBSOCKET"
-                                                            : "UNKNOWN",
-                 client_info);
-    }
+    //ESP_LOGI(TAG, "Client list err: %d", ret);
+    //ESP_LOGI(TAG, "[HTTPD CLIENT TYPE]");
+    //for (int i = 0; i < fds; i++) {
+        //int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
+        //ESP_LOGI(TAG, "    [%d] = %s (%d)", i,
+        //         client_info == HTTPD_WS_CLIENT_INVALID     ? "HTTPD_WS_CLIENT_INVALID"
+        //         : client_info == HTTPD_WS_CLIENT_HTTP      ? "HTTPD_WS_CLIENT_HTTP"
+        //         : client_info == HTTPD_WS_CLIENT_WEBSOCKET ? "HTTPD_WS_CLIENT_WEBSOCKET"
+        //                                                    : "UNKNOWN",
+        //         client_info);
+    //}
 
     if (ret != ESP_OK) {
         ESP_LOGI(TAG, "No clients");
@@ -119,7 +119,7 @@ static void ws_async_send(void *arg) {
     for (int i = 0; i < fds; i++) {
         int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
         if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
-            ESP_LOGI(TAG, "Response on client %d", i);
+            //ESP_LOGI(TAG, "Response on client %d", i);
             httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
         }
     }
@@ -128,7 +128,7 @@ static void ws_async_send(void *arg) {
     if (response_data != NULL)
         free(response_data);
     response_data = NULL;
-    ESP_LOGI(TAG, "End response data");
+    //ESP_LOGI(TAG, "End response data");
 }
 
 static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req) {
@@ -174,7 +174,7 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
             free(buf);
             return ret;
         }
-        ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
+        //ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
 
         if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
             char type[64], cmd[64];
