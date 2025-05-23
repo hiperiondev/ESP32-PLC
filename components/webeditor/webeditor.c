@@ -27,6 +27,7 @@
  *
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +43,7 @@ static const char *TAG = "WebSocket Server";
 extern const char index_html[] asm("_binary_ladder_editor_html_start");
 extern const char favicon_ico[] asm("_binary_webeditor_favicon_ico_start");
 extern ladder_ctx_t ladder_ctx;
-
+bool websocket_open = false;
 static httpd_handle_t server = NULL;
 static char *response_data = NULL;
 
@@ -122,13 +123,18 @@ static void ws_async_send(void *arg) {
             httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
         }
     }
-    free(resp_arg);
-    free(response_data);
+    if (resp_arg != NULL)
+        free(resp_arg);
+    if (response_data != NULL)
+        free(response_data);
     response_data = NULL;
     ESP_LOGI(TAG, "End response data");
 }
 
 static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req) {
+    if (req == NULL)
+        return ESP_OK;
+
     esp_err_t err = 0;
     async_resp_arg_t *resp_arg = malloc(sizeof(struct async_resp_arg_s));
     resp_arg->hd = req->handle;
@@ -214,7 +220,8 @@ static esp_err_t handle_ws_req(httpd_req_t *req) {
             switch (_cmd) {
                 case WS_GET_FLAG:
                     ESP_LOGI(TAG, "Requested: get_flag");
-                    response_data = strdup("{\"sameDimensionsFlag\":\"true\"}");
+                    response_data = strdup("{\"flag\":\"sameDimensions\",\"value\":false}");
+                    websocket_open = true;
                     break;
                 case WS_LOAD:
                     ESP_LOGI(TAG, "Requested: load");
@@ -300,4 +307,47 @@ void start_websocket_server(void) {
     }
 }
 
+esp_err_t ws_send_netstate(bool running) {
+    esp_err_t err = 0;
+    char *msg = malloc(37);
+    char msg_status[128];
+    async_resp_arg_t *arg = malloc(sizeof(struct async_resp_arg_s));
+    arg->hd = server;
 
+    if (running) {
+        msg = malloc(37);
+        strcpy(msg, "{\"status\":\"running\",\"cell_states\":[");
+        for (unsigned int network = 0; network < ladder_ctx.ladder.quantity.networks; network++) {
+            for (unsigned int column = 0; column < ladder_ctx.exec_network->cols; column++) {
+                for (unsigned int row = 0; row < ladder_ctx.exec_network->rows; row++) {
+                    memset(msg_status, 0, 128);
+                    snprintf(msg_status, 127, "{\"networkId\":%u,\"row\":%u,\"col\":%u,\"state\":%u},", network, row, column,
+                             (unsigned int)(ladder_ctx.network[network].cells[row][column].state == true ? 1 : 0));
+                    msg = realloc(msg, strlen(msg) + strlen(msg_status) + 1);
+                    if (msg == NULL) {
+                        ESP_LOGI(TAG, "Can't allocate networks status");
+                        return ESP_FAIL;
+                    }
+                    memcpy(msg + strlen(msg), msg_status, strlen(msg_status) + 1);
+                }
+            }
+        }
+        memset(msg_status, 0, 128);
+        msg[strlen(msg) - 1] = ' ';
+        strcpy(msg_status, "]}");
+        msg = realloc(msg, strlen(msg) + strlen(msg_status) + 1);
+        if (msg == NULL) {
+            ESP_LOGI(TAG, "Can't allocate networks status");
+            return ESP_FAIL;
+        }
+        memcpy(msg + strlen(msg), msg_status, strlen(msg_status) + 1);
+    } else {
+        msg = malloc(37);
+        strcpy(msg, "{\"status\":\"not_running\"}");
+    }
+
+    response_data = msg;
+    ws_async_send(arg);
+
+    return err;
+}

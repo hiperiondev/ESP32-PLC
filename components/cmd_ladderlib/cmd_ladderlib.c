@@ -187,7 +187,7 @@ static int ladder_start(int argc, char **argv) {
     ladder_ctx.ladder.state = LADDER_ST_RUNNING;
 
     ESP_LOGI(TAG, "Start Task Ladder");
-    if (xTaskCreatePinnedToCore(ladder_task, "ladder", 15000, (void *)&ladder_ctx, 10, &laddertsk_handle, 1) != pdPASS)
+    if (xTaskCreatePinnedToCore(ladder_task, "ladder", 30000, (void *)&ladder_ctx, 10, &laddertsk_handle, 1) != pdPASS)
         ESP_LOGI(TAG, "ERROR: start task ladder");
 
     return 0;

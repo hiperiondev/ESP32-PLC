@@ -30,6 +30,13 @@
 #ifndef WEBEDITOR_H_
 #define WEBEDITOR_H_
 
+#include <stdbool.h>
+
+#include "esp_err.h"
+
+extern bool websocket_open;
+
 void start_websocket_server(void);
+esp_err_t ws_send_netstate(bool running);
 
 #endif /* WEBEDITOR_H_ */

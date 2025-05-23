@@ -13,4 +13,5 @@ idf_component_register(
         ladderlib
         hal_esp32
         esp_timer
+        webeditor
 )

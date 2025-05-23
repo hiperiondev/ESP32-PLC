@@ -29,14 +29,16 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_timer.h"
 
 #include "ladder.h"
 #include "ladderlib_esp32_std.h"
+#include "webeditor.h"
 
 static const char *TAG = "ladderlib_esp32_std";
 
@@ -109,6 +111,8 @@ uint64_t esp32_millis(void) {
 }
 
 bool esp32_on_scan_end(ladder_ctx_t *ladder_ctx) {
+    ws_send_netstate(true);
+
     return false;
 }
 
@@ -140,5 +144,6 @@ void esp32_on_panic(ladder_ctx_t *ladder_ctx) {
 
 void esp32_on_end_task(ladder_ctx_t *ladder_ctx) {
     ESP_LOGI(TAG, "End Task Ladder");
+    ws_send_netstate(false);
     vTaskDelete(NULL);
 }
