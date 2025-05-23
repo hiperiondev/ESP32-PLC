@@ -38,6 +38,12 @@
 The ESP32-PLC project, developed by hiperiondev, aims to transform the ESP32 microcontroller into a Programmable Logic Controller (PLC) for industrial automation and control systems. PLCs are specialized devices used to control machinery and processes through programmed logic, commonly using ladder logic, a graphical programming language defined by the IEC 61131-3 standard. Unlike traditional PLCs, which can be expensive, this project leverages the low-cost, feature-rich ESP32, known for its dual-core processor, Wi-Fi, and Bluetooth capabilities, to provide an accessible alternative.  
   
 The project uses the Espressif IoT Development Framework (ESP-IDF), a low-level development environment that offers greater control over the ESP32 hardware compared to Arduino-based solutions. It likely integrates the [ladderlib](https://github.com/hiperiondev/ladderlib) C library for executing ladder logic programs and may work with the [ladder-editor](https://github.com/hiperiondev/ladder-editor), a web-based tool for creating and simulating ladder logic diagrams. As a work-in-progress, the project may lack comprehensive documentation, but it holds promise for applications in industrial automation, education, and IoT.  
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Features  
   
@@ -51,6 +57,12 @@ The following features are inferred based on the project’s context and related
 - **Open-Source:** Freely accessible codebase, encouraging community contributions.  
   
 *Note:* As the project is under development, the feature set may evolve. Check the [GitHub repository](https://github.com/hiperiondev/ESP32-PLC) for updates.  
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## System Architecture  
   
@@ -69,7 +81,13 @@ The ESP32-PLC project likely employs a modular architecture:
 - The runtime likely uses FreeRTOS (included in ESP-IDF) for real-time task scheduling.  
   
 4. **Communication Layer (Speculative):**  
-- The ESP32’s Wi-Fi or Bluetooth capabilities may enable communication with external systems, such as IoT platforms or Human-Machine Interfaces (HMIs), though this is not confirmed.  
+- The ESP32’s Wi-Fi or Bluetooth capabilities may enable communication with external systems, such as IoT platforms or Human-Machine Interfaces (HMIs), though this is not confirmed.
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Hardware Requirements  
   
@@ -89,13 +107,25 @@ To implement the ESP32-PLC project, you will need:
 | Push Button | Digital input for triggering logic | Tactile switch |  
 | Relay Module | Output for controlling devices | 5V single-channel relay |  
 | Power Supply | Power for ESP32 and peripherals | 5V 2A USB power adapter |  
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Software Requirements  
   
 - **ESP-IDF Framework:** Version 5.4.1 or later, available at [ESP-IDF Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html).  
 - **Ladder Logic Editor:** The [ladder-editor](https://github.com/hiperiondev/ladder-editor) or a compatible tool for creating ladder logic diagrams.  
 - **Development Environment:** A code editor like VSCode with the ESP-IDF extension or a command-line interface for building and flashing.  
-- **Optional Tools:** Serial monitor (e.g., minicom, PuTTY) for debugging, or MQTT clients for potential IoT integration.  
+- **Optional Tools:** Serial monitor (e.g., minicom, PuTTY) for debugging, or MQTT clients for potential IoT integration.
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Installation  
   
@@ -137,7 +167,13 @@ idf.py -p PORT flash
 - Use the ESP-IDF monitor to view serial output for debugging:  
 ```bash  
 idf.py monitor  
-```  
+```
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Usage  
   
@@ -162,6 +198,12 @@ The workflow for using the ESP32-PLC project includes:
 - Monitor the execution using the ESP-IDF monitor or external tools to verify the ladder logic behavior.  
   
 *Note:* Specific integration steps may depend on the project’s implementation. Refer to the [GitHub repository](https://github.com/hiperiondev/ESP32-PLC) for updates.  
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Example Applications  
   
@@ -180,7 +222,13 @@ The following hypothetical applications illustrate potential uses, based on simi
 3. **Counter-Based Control:**  
 - **Objective:** Stop a conveyor after detecting 10 items.  
 - **Ladder Logic:** A sensor contact increments a counter, triggering an output when the count reaches 10.  
-- **Hardware:** Sensor on GPIO 15, relay on GPIO 23.  
+- **Hardware:** Sensor on GPIO 15, relay on GPIO 23.
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Troubleshooting  
   
@@ -200,15 +248,34 @@ Common issues and solutions:
   
 - **Missing Documentation:**  
 - **Issue:** Unclear how to integrate ladder logic programs.  
-- **Solution:** Monitor the [GitHub repository](https://github.com/hiperiondev/ESP32-PLC) for updates or contribute to documentation efforts.  
+- **Solution:** Monitor the [GitHub repository](https://github.com/hiperiondev/ESP32-PLC) for updates or contribute to documentation efforts.
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
 ## Contributing  
   
 Contributions are welcome, especially given the project’s early stage. To contribute:  
 - Submit issues or feature requests on the [GitHub Issues](https://github.com/hiperiondev/ESP32-PLC/issues) page.  
 - Propose code or documentation improvements via pull requests.  
-- Engage in discussions on the repository to share ideas.  
+- Engage in discussions on the repository to share ideas.
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
   
-## License  
-  
-Refer to the LICENSE file in the [GitHub repository](https://github.com/hiperiondev/ESP32-PLC) for licensing information. 
+<!-- LICENSE -->
+## License
+
+Distributed under the MIT License. See `LICENSE.txt` for more information.
+
+<div align="right">
+  <a href="#readme-top">
+    <img src="images/backtotop.png" alt="backtotop" width="30" height="30">
+  </a>
+</div>
