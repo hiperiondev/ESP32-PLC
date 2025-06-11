@@ -1,10 +1,10 @@
 ## IDF Component Manager Manifest File
 dependencies:
-  joltwallet/littlefs: "==1.16.4"
-  ## Required IDF version
   idf:
     version: ">=5.4.0"
+    
+  joltwallet/littlefs: "==1.16.4"
   espressif/mdns: '*'
-#  espressif/esp-modbus: 
-#    version: ">=1.0"
+  skuodi/libssh2_esp: "==1.0.0"
+# espressif/esp-modbus: '*'
   

@@ -184,6 +184,8 @@ static int ladder_start(int argc, char **argv) {
         return 1;
     }
 
+
+
     ladder_ctx.ladder.state = LADDER_ST_RUNNING;
 
     ESP_LOGI(TAG, "Start Task Ladder");
