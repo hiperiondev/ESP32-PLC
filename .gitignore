@@ -55,7 +55,7 @@ dkms.conf
 .project
 Release
 .settings
-temp
+temp/
 vgcore*
 .metadata/
 build/
